@@ -2,7 +2,9 @@ using Microsoft.EntityFrameworkCore;
 using Talabat.Core.Repositories.Contract;
 using Talabat.Repository;
 using Talabat.Repository.Data;
+using AutoMapper;
 
+using Talabat.APIs.Dtos.Helpers;
 namespace Talabat.APIs
 {
 	public class Program
@@ -27,6 +29,8 @@ namespace Talabat.APIs
 			});
 
 			webApplicationBuilder.Services.AddScoped(typeof(IGenericRepository<>),typeof(GenericRepository<>));
+
+			webApplicationBuilder.Services.AddAutoMapper(typeof(MappingProfiles));
 
 			#endregion
 
