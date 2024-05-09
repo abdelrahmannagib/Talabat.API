@@ -9,17 +9,24 @@ using Talabat.Core.Specifications;
 
 namespace Talabat.Repository
 {
-	internal static class SpecificationsEvaluator<T> where T : BaseEntity
+	internal static class SpecificationsEvaluator<TEntity> where TEntity : BaseEntity
 	{
-		public static IQueryable<T> GetQuery(IQueryable<T> inputQuery, ISpecifications<T> spec)
+		public static IQueryable<TEntity> GetQuery(IQueryable<TEntity> inputQuery, ISpecifications<TEntity> spec)
 		{
-			var query = inputQuery;//ex DBContext.Set<Product>
-
-			if (spec.Criteria is not null)
+			var query = inputQuery; //_dbContext.Set<TEntity>()
+			if (spec.Criteria is not null) //P => P.Id == 1
 				query = query.Where(spec.Criteria);
-
-			query = spec.Includes.Aggregate(query, (currentQuery, IncludeExpression) => currentQuery.Include(IncludeExpression));
-
+			//_dbContext.Set<TEntity>().Where(P => P.Id == 1)
+			if (spec.OrderBy is not null)
+				query = query.OrderBy(spec.OrderBy);
+			else if (spec.OrderByDesc is not null)
+				query = query.OrderByDescending(spec.OrderByDesc);
+			if (spec.IsPaginationEnabled)
+				query = query.Skip(spec.Skip).Take(spec.Take);
+			//Include expressions 
+			//1) P => P.Brand
+			//2) P => P.Category 
+			query = spec.Includes.Aggregate(query, (currentQuery, includeExpression) => currentQuery.Include(includeExpression));
 			return query;
 		}
 	}

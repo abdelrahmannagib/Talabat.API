@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Talabat.APIs.Dtos;
+using Talabat.APIs.Dtos.Helpers;
 using Talabat.Core.Entities;
 using Talabat.Core.Repositories.Contract;
 using Talabat.Core.Specifications.ProductSpecs;
@@ -30,14 +31,16 @@ namespace Talabat.APIs.Controllers
 		}
 
 		[HttpGet]
-		public async Task<ActionResult<IEnumerable<ProductToReturnDto>>> GetProducts()
+		public async Task<ActionResult<Pagination<ProductToReturnDto>>> GetProducts([FromQuery] ProductSpecParams specParams)
 		{
-			//var products = await _productsReop.GetAllAsync();
-			var spec =new ProductWithBrandAndCategorySpecifications();
-			var products= await _productsRepo.GetAllWithSpecAsync(spec);
-
-			return Ok(_mapper.Map<IEnumerable<Product>, IEnumerable<ProductToReturnDto>>(products));
+			var spec = new ProductWithBrandAndCategorySpecifications(specParams);
+			var products = await _productsRepo.GetAllWithSpecAsync(spec);
+			var data = _mapper.Map<IReadOnlyList<Product>, IReadOnlyList<ProductToReturnDto>>(products);
+			var countSpec = new ProductsWithFilterationForCountSpecifications(specParams);
+			var count = await _productsRepo.GetCountAsync(countSpec);
+			return Ok(new Pagination<ProductToReturnDto>(specParams.PageIndex, specParams.PageSize, count, data));
 		}
+
 
 		// baseurl/apiProducts/1
 
