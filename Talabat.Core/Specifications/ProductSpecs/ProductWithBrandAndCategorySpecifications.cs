@@ -9,22 +9,55 @@ namespace Talabat.Core.Specifications.ProductSpecs
 {
 	public class ProductWithBrandAndCategorySpecifications : BaseSpecifications<Product>
 	{
-		public ProductWithBrandAndCategorySpecifications()
-			: base()
+		public ProductWithBrandAndCategorySpecifications(ProductSpecParams specParams) : base(P =>
+																		 (string.IsNullOrEmpty(specParams.Search) || P.Name.ToLower().Contains(specParams.Search) &&
+																		 (!specParams.BrandId.HasValue || P.BrandId == specParams.BrandId.Value) &&
+																		 (!specParams.CategoryId.HasValue || P.CategoryId == specParams.CategoryId.Value)
+		   ))
 		{
-			AddIncludes();
-		}
+			//AddIncludes();
+			Includes.Add(P => P.Brand);
+			Includes.Add(P => P.Category);
 
-		public ProductWithBrandAndCategorySpecifications(int id)
-			: base(P => P.Id == id)
-		{
-			AddIncludes();
+			if (!string.IsNullOrEmpty(specParams.Sort))
+			{
+				switch (specParams.Sort)
+				{
+					case "priceAsc":
+						//OrderBy = P => P.Price;
+						
+						AddOrderBy(P => P.Price);
+						break;
+					case "priceDesc":
+						//OrderByDesc = P => P.Price;
+						AddOrderByDesc(P => P.Price);
+						break;
+					default:
+						//OrderBy = P => P.Name;
+						AddOrderBy(P => P.Name);
+						break;
+				}
+			}
+			else
+			{
+				AddOrderBy(P => P.Name);
+			}
+			ApplyPagination((specParams.PageIndex - 1) * specParams.PageSize, specParams.PageSize);
 		}
-
-		private void AddIncludes()
+		//This constructor will be used to create an object that will be used to get a specifc product with id
+		public ProductWithBrandAndCategorySpecifications(int id) : base(P => P.Id == id)
 		{
+			//AddIncludes();
 			Includes.Add(P => P.Brand);
 			Includes.Add(P => P.Category);
 		}
+		
+		
+		//private void AddIncludes()
+		//{
+		//	Includes.Add(P => P.Brand);
+		//	Includes.Add(P => P.Category);
+		//}
 	}
 }
+
